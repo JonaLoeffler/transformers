@@ -39,7 +39,7 @@ def batch(args):
 
     tqdm.pandas()
 
-    df["text"] = df["text"].progress_apply(lambda text: translate(model, tokenizer, text))
+    df["formula"] = df["text"].progress_apply(lambda text: translate(model, tokenizer, text))
 
     df.to_csv(sys.stdout, sep="\t", index=False, header=False)
 
@@ -54,10 +54,9 @@ def arguments():
     )
 
     parser.add_argument(
-        "--interactive",
-        type=bool,
+            "-i", "--interactive",
+        action="store_true",
         help="Whether to start an interactive session",
-        default=False,
     )
 
     return parser.parse_args()
