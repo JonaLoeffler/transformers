@@ -9,9 +9,10 @@ def translate(model, tokenizer, text):
     encoded = tokenizer(text, return_tensors="pt").input_ids
     generated = model.generate(encoded)
 
-    return tokenizer.decode(generated[0])    
+    return tokenizer.decode(generated[0])
 
-def main(args):
+
+def interactive(args):
     tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_path)
     model = AutoModelForSeq2SeqLM.from_pretrained(args.model_name_or_path)
 
@@ -20,7 +21,25 @@ def main(args):
 
         print(translate(model, tokenizer, text))
 
-if __name__ == "__main__":
+
+def batch(args):
+    import sys
+    import pandas as pd
+    from tqdm import tqdm
+
+    tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_path)
+    model = AutoModelForSeq2SeqLM.from_pretrained(args.model_name_or_path)
+
+    df = pd.read_csv(sys.stdin, sep="\t", names=["text", "formula"])
+
+    tqdm.pandas()
+
+    df["text"] = df["text"].progress_apply(lambda text: translate(model, tokenizer, text))
+
+    df.to_csv(sys.stdout, sep="\t", index=False, header=False)
+
+
+def arguments():
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
@@ -29,7 +48,20 @@ if __name__ == "__main__":
         help="The name or path of the model to be used.",
     )
 
-    args = parser.parse_args()
+    parser.add_argument(
+        "--interactive",
+        type=bool,
+        help="Whether to start an interactive session",
+        default=False,
+    )
 
-    main(args)
- 
+    return parser.parse_args()
+
+
+if __name__ == "__main__":
+    args = arguments()
+
+    if args.interactive:
+        interactive(args)
+    else:
+        batch(args)
