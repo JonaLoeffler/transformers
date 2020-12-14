@@ -371,8 +371,8 @@ class TranslationModule(SummarizationModule):
 
     def __init__(self, hparams, **kwargs):
         super().__init__(hparams, **kwargs)
-        self.dataset_kwargs["src_lang"] = hparams.src_lang
-        self.dataset_kwargs["tgt_lang"] = hparams.tgt_lang
+        #self.dataset_kwargs["src_lang"] = hparams.src_lang
+        #self.dataset_kwargs["tgt_lang"] = hparams.tgt_lang
 
     def calc_generative_metrics(self, preds, target) -> dict:
         return calculate_bleu(preds, target)
