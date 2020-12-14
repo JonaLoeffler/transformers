@@ -344,13 +344,6 @@ class TFModelTesterMixin:
             tf_hidden_states[pt_nans] = 0
 
             max_diff = np.amax(np.abs(tf_hidden_states - pt_hidden_states))
-            # Debug info (remove when fixed)
-            if max_diff >= 4e-2:
-                print("===")
-                print(model_class)
-                print(config)
-                print(inputs_dict)
-                print(pt_inputs_dict)
             self.assertLessEqual(max_diff, 4e-2)
 
             # Check we can load pt model in tf and vice-versa with checkpoint => model functions
@@ -599,12 +592,26 @@ class TFModelTesterMixin:
 
     def test_model_common_attributes(self):
         config, inputs_dict = self.model_tester.prepare_config_and_inputs_for_common()
+        list_lm_models = (
+            list(TF_MODEL_FOR_CAUSAL_LM_MAPPING.values())
+            + list(TF_MODEL_FOR_MASKED_LM_MAPPING.values())
+            + list(TF_MODEL_FOR_SEQ_TO_SEQ_CAUSAL_LM_MAPPING.values())
+        )
 
         for model_class in self.all_model_classes:
             model = model_class(config)
             assert isinstance(model.get_input_embeddings(), (tf.keras.layers.Layer, TFAdaptiveEmbedding))
-            x = model.get_output_embeddings()
-            assert x is None or isinstance(x, tf.keras.layers.Layer)
+
+            if model_class in list_lm_models:
+                x = model.get_output_layer_with_bias()
+                assert isinstance(x, tf.keras.layers.Layer)
+                name = model.get_prefix_bias_name()
+                assert isinstance(name, str)
+            else:
+                x = model.get_output_layer_with_bias()
+                assert x is None
+                name = model.get_prefix_bias_name()
+                assert x is None
 
     def test_determinism(self):
         config, inputs_dict = self.model_tester.prepare_config_and_inputs_for_common()

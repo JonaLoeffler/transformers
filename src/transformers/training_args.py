@@ -1,3 +1,17 @@
+# Copyright 2020 The HuggingFace Team. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import dataclasses
 import json
 import os
@@ -189,6 +203,10 @@ class TrainingArguments:
         model_parallel (:obj:`bool`, `optional`, defaults to :obj:`False`):
             If there are more than one devices, whether to use model parallelism to distribute the model's modules
             across devices or not.
+        ignore_data_skip (:obj:`bool`, `optional`, defaults to :obj:`False`):
+            When resuming training, whether or not to skip the epochs and batches to get the data loading at the same
+            stage as in the previous training. If set to :obj:`True`, the training will begin faster (as that skipping
+            step can take a long time) but will not yield the same results as the interrupted training would have.
     """
 
     output_dir: str = field(
@@ -350,6 +368,12 @@ class TrainingArguments:
     greater_is_better: Optional[bool] = field(
         default=None, metadata={"help": "Whether the `metric_for_best_model` should be maximized or not."}
     )
+    ignore_data_skip: bool = field(
+        default=False,
+        metadata={
+            "help": "When resuming training, whether or not to skip the first epochs and batches to get to the same training data."
+        },
+    )
 
     def __post_init__(self):
         if self.disable_tqdm is None:
@@ -455,6 +479,27 @@ class TrainingArguments:
         """
         return self._setup_devices[1]
 
+    @property
+    @torch_required
+    def parallel_mode(self):
+        """
+        The current mode used for parallelism if multiple GPUs/TPU cores are available. One of:
+
+        - :obj:`ParallelMode.NOT_PARALLEL`: no parallelism (CPU or one GPU).
+        - :obj:`ParallelMode.NOT_DISTRIBUTED`: several GPUs in one single process (uses :obj:`torch.nn.DataParallel`).
+        - :obj:`ParallelMode.DISTRIBUTED`: several GPUs, each ahving its own process (uses
+          :obj:`torch.nn.DistributedDataParallel`).
+        - :obj:`ParallelMode.TPU`: several TPU cores.
+        """
+        if is_torch_tpu_available():
+            return ParallelMode.TPU
+        elif self.local_rank != -1:
+            return ParallelMode.DISTRIBUTED
+        elif self.n_gpu > 1:
+            return ParallelMode.NOT_DISTRIBUTED
+        else:
+            return ParallelMode.NOT_PARALLEL
+
     def to_dict(self):
         """
         Serializes this instance while replace `Enum` by their values (for JSON serialization support).
@@ -483,3 +528,10 @@ class TrainingArguments:
             valid_types.append(torch.Tensor)
 
         return {k: v if type(v) in valid_types else str(v) for k, v in d.items()}
+
+
+class ParallelMode(Enum):
+    NOT_PARALLEL = "not_parallel"
+    NOT_DISTRIBUTED = "not_distributed"
+    DISTRIBUTED = "distributed"
+    TPU = "tpu"

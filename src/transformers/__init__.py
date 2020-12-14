@@ -2,7 +2,21 @@
 # There's no way to ignore "F401 '...' imported but unused" warnings in this
 # module, but to preserve other warnings. So, don't check this module at all.
 
-__version__ = "4.0.0-rc-1"
+# Copyright 2020 The HuggingFace Team. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+__version__ = "4.1.0.dev0"
 
 # Work around to update TensorFlow's absl.logging threshold which alters the
 # default Python logging output behavior when present.
@@ -138,6 +152,7 @@ from .models.marian import MarianConfig
 from .models.mbart import MBartConfig
 from .models.mmbt import MMBTConfig
 from .models.mobilebert import MOBILEBERT_PRETRAINED_CONFIG_ARCHIVE_MAP, MobileBertConfig, MobileBertTokenizer
+from .models.mpnet import MPNET_PRETRAINED_CONFIG_ARCHIVE_MAP, MPNetConfig, MPNetTokenizer
 from .models.mt5 import MT5Config
 from .models.openai import OPENAI_GPT_PRETRAINED_CONFIG_ARCHIVE_MAP, OpenAIGPTConfig, OpenAIGPTTokenizer
 from .models.pegasus import PegasusConfig
@@ -209,10 +224,12 @@ from .integrations import (  # isort:skip
 
 if is_sentencepiece_available():
     from .models.albert import AlbertTokenizer
+    from .models.barthez import BarthezTokenizer
     from .models.bert_generation import BertGenerationTokenizer
     from .models.camembert import CamembertTokenizer
     from .models.marian import MarianTokenizer
     from .models.mbart import MBartTokenizer
+    from .models.mt5 import MT5Tokenizer
     from .models.pegasus import PegasusTokenizer
     from .models.reformer import ReformerTokenizer
     from .models.t5 import T5Tokenizer
@@ -225,6 +242,7 @@ else:
 if is_tokenizers_available():
     from .models.albert import AlbertTokenizerFast
     from .models.bart import BartTokenizerFast
+    from .models.barthez import BarthezTokenizerFast
     from .models.bert import BertTokenizerFast
     from .models.camembert import CamembertTokenizerFast
     from .models.distilbert import DistilBertTokenizerFast
@@ -238,6 +256,8 @@ if is_tokenizers_available():
     from .models.lxmert import LxmertTokenizerFast
     from .models.mbart import MBartTokenizerFast
     from .models.mobilebert import MobileBertTokenizerFast
+    from .models.mpnet import MPNetTokenizerFast
+    from .models.mt5 import MT5TokenizerFast
     from .models.openai import OpenAIGPTTokenizerFast
     from .models.pegasus import PegasusTokenizerFast
     from .models.reformer import ReformerTokenizerFast
@@ -301,12 +321,14 @@ if is_torch_available():
     )
     from .generation_beam_search import BeamScorer, BeamSearchScorer
     from .generation_logits_process import (
+        HammingDiversityLogitsProcessor,
         LogitsProcessor,
         LogitsProcessorList,
         LogitsWarper,
         MinLengthLogitsProcessor,
         NoBadWordsLogitsProcessor,
         NoRepeatNGramLogitsProcessor,
+        PrefixConstrainedLogitsProcessor,
         RepetitionPenaltyLogitsProcessor,
         TemperatureLogitsWarper,
         TopKLogitsWarper,
@@ -356,6 +378,7 @@ if is_torch_available():
         BartForQuestionAnswering,
         BartForSequenceClassification,
         BartModel,
+        BartPretrainedModel,
         PretrainedBartModel,
     )
     from .models.bert import (
@@ -389,7 +412,13 @@ if is_torch_available():
         CamembertForTokenClassification,
         CamembertModel,
     )
-    from .models.ctrl import CTRL_PRETRAINED_MODEL_ARCHIVE_LIST, CTRLLMHeadModel, CTRLModel, CTRLPreTrainedModel
+    from .models.ctrl import (
+        CTRL_PRETRAINED_MODEL_ARCHIVE_LIST,
+        CTRLForSequenceClassification,
+        CTRLLMHeadModel,
+        CTRLModel,
+        CTRLPreTrainedModel,
+    )
     from .models.deberta import (
         DEBERTA_PRETRAINED_MODEL_ARCHIVE_LIST,
         DebertaForSequenceClassification,
@@ -504,7 +533,18 @@ if is_torch_available():
         MobileBertPreTrainedModel,
         load_tf_weights_in_mobilebert,
     )
-    from .models.mt5 import MT5ForConditionalGeneration, MT5Model
+    from .models.mpnet import (
+        MPNET_PRETRAINED_MODEL_ARCHIVE_LIST,
+        MPNetForMaskedLM,
+        MPNetForMultipleChoice,
+        MPNetForQuestionAnswering,
+        MPNetForSequenceClassification,
+        MPNetForTokenClassification,
+        MPNetLayer,
+        MPNetModel,
+        MPNetPreTrainedModel,
+    )
+    from .models.mt5 import MT5EncoderModel, MT5ForConditionalGeneration, MT5Model
     from .models.openai import (
         OPENAI_GPT_PRETRAINED_MODEL_ARCHIVE_LIST,
         OpenAIGPTDoubleHeadsModel,
@@ -559,6 +599,7 @@ if is_torch_available():
     )
     from .models.t5 import (
         T5_PRETRAINED_MODEL_ARCHIVE_LIST,
+        T5EncoderModel,
         T5ForConditionalGeneration,
         T5Model,
         T5PreTrainedModel,
@@ -567,6 +608,7 @@ if is_torch_available():
     from .models.transfo_xl import (
         TRANSFO_XL_PRETRAINED_MODEL_ARCHIVE_LIST,
         AdaptiveEmbedding,
+        TransfoXLForSequenceClassification,
         TransfoXLLMHeadModel,
         TransfoXLModel,
         TransfoXLPreTrainedModel,
@@ -763,6 +805,7 @@ if is_tf_available():
     from .models.gpt2 import (
         TF_GPT2_PRETRAINED_MODEL_ARCHIVE_LIST,
         TFGPT2DoubleHeadsModel,
+        TFGPT2ForSequenceClassification,
         TFGPT2LMHeadModel,
         TFGPT2MainLayer,
         TFGPT2Model,
@@ -801,7 +844,18 @@ if is_tf_available():
         TFMobileBertModel,
         TFMobileBertPreTrainedModel,
     )
-    from .models.mt5 import TFMT5ForConditionalGeneration, TFMT5Model
+    from .models.mpnet import (
+        TF_MPNET_PRETRAINED_MODEL_ARCHIVE_LIST,
+        TFMPNetForMaskedLM,
+        TFMPNetForMultipleChoice,
+        TFMPNetForQuestionAnswering,
+        TFMPNetForSequenceClassification,
+        TFMPNetForTokenClassification,
+        TFMPNetMainLayer,
+        TFMPNetModel,
+        TFMPNetPreTrainedModel,
+    )
+    from .models.mt5 import TFMT5EncoderModel, TFMT5ForConditionalGeneration, TFMT5Model
     from .models.openai import (
         TF_OPENAI_GPT_PRETRAINED_MODEL_ARCHIVE_LIST,
         TFOpenAIGPTDoubleHeadsModel,
@@ -824,6 +878,7 @@ if is_tf_available():
     )
     from .models.t5 import (
         TF_T5_PRETRAINED_MODEL_ARCHIVE_LIST,
+        TFT5EncoderModel,
         TFT5ForConditionalGeneration,
         TFT5Model,
         TFT5PreTrainedModel,
@@ -882,7 +937,7 @@ else:
 
 if is_flax_available():
     from .models.auto import FLAX_MODEL_MAPPING, FlaxAutoModel
-    from .models.bert import FlaxBertModel
+    from .models.bert import FlaxBertForMaskedLM, FlaxBertModel
     from .models.roberta import FlaxRobertaModel
 else:
     # Import the same objects as dummies to get them in the namespace.
@@ -890,9 +945,9 @@ else:
     from .utils.dummy_flax_objects import *
 
 
-if not is_tf_available() and not is_torch_available():
+if not is_tf_available() and not is_torch_available() and not is_flax_available():
     logger.warning(
-        "Neither PyTorch nor TensorFlow >= 2.0 have been found. "
+        "None of PyTorch, TensorFlow >= 2.0, or Flax have been found. "
         "Models won't be available and only tokenizers, configuration "
         "and file/data utilities can be used."
     )

@@ -459,6 +459,7 @@ class LongformerEmbeddings(nn.Module):
 
         # position_ids (1, len position emb) is contiguous in memory and exported when serialized
         self.register_buffer("position_ids", torch.arange(config.max_position_embeddings).expand((1, -1)))
+        self.position_embedding_type = getattr(config, "position_embedding_type", "absolute")
 
         self.padding_idx = config.pad_token_id
         self.position_embeddings = nn.Embedding(
@@ -1630,6 +1631,9 @@ class LongformerForMaskedLM(LongformerPreTrainedModel):
 
     def get_output_embeddings(self):
         return self.lm_head.decoder
+
+    def set_output_embeddings(self, new_embeddings):
+        self.lm_head.decoder = new_embeddings
 
     @add_start_docstrings_to_model_forward(LONGFORMER_INPUTS_DOCSTRING.format("batch_size, sequence_length"))
     @replace_return_docstrings(output_type=LongformerMaskedLMOutput, config_class=_CONFIG_FOR_DOC)
