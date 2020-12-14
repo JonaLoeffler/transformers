@@ -9,12 +9,11 @@ def translate(model, tokenizer, text):
     encoded = tokenizer(text, return_tensors="pt").input_ids
     generated = model.generate(encoded)
 
-    decoded = tokenizer.decode(generated[0])
+    decoded = tokenizer.decode(generated[0]).replace("<pad>", "").replace("</s>", "").replace("<s>", "")
 
     if type(model) is T5ForConditionalGeneration:
         return decoded.replace("<unk>", "~")
     return decoded
-
 
 
 def interactive(args):
@@ -54,7 +53,8 @@ def arguments():
     )
 
     parser.add_argument(
-            "-i", "--interactive",
+        "-i",
+        "--interactive",
         action="store_true",
         help="Whether to start an interactive session",
     )
