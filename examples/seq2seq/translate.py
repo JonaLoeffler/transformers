@@ -2,7 +2,7 @@
 
 import torch
 import argparse
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, T5ForConditionalGeneration
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, T5ForConditionalGeneration, MarianMTModel
 
 
 def translate(model, tokenizer, text):
@@ -13,6 +13,10 @@ def translate(model, tokenizer, text):
 
     if type(model) is T5ForConditionalGeneration:
         return decoded.replace("<unk>", "~")
+
+    if type(model) is MarianMTModel:
+        return decoded.replace("⁇", "|")
+
     return decoded
 
 
