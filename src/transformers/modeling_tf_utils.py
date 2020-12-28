@@ -354,7 +354,7 @@ def input_processing(func, config, input_ids, **kwargs):
         if isinstance(v, allowed_types) or v is None:
             output[k] = v
         else:
-            raise ValueError(f"Data of type {type(v)} is not allowed only tf.Tensor is accepted for {k}.")
+            raise ValueError(f"Data of type {type(v)} is not allowed only {allowed_types} is accepted for {k}.")
 
     if isinstance(input_ids, (tuple, list)):
         for i, input in enumerate(input_ids):
@@ -372,7 +372,7 @@ def input_processing(func, config, input_ids, **kwargs):
                 output[parameter_names[i]] = input
             else:
                 raise ValueError(
-                    f"Data of type {type(input)} is not allowed only tf.Tensor is accepted for {parameter_names[i]}."
+                    f"Data of type {type(input)} is not allowed only {allowed_types} is accepted for {parameter_names[i]}."
                 )
     elif isinstance(input_ids, (dict, BatchEncoding)):
         if "inputs" in input_ids:
@@ -399,13 +399,13 @@ def input_processing(func, config, input_ids, **kwargs):
                 )
                 continue
             else:
-                raise ValueError(f"Data of type {type(v)} is not allowed only tf.Tensor is accepted for {k}.")
+                raise ValueError(f"Data of type {type(v)} is not allowed only {allowed_types} is accepted for {k}.")
     else:
         if isinstance(input_ids, tf.Tensor) or input_ids is None:
             output[parameter_names[0]] = input_ids
         else:
             raise ValueError(
-                f"Data of type {type(input_ids)} is not allowed only tf.Tensor is accepted for {parameter_names[0]}."
+                f"Data of type {type(input_ids)} is not allowed only {allowed_types} is accepted for {parameter_names[0]}."
             )
 
     for name in parameter_names:
@@ -894,6 +894,9 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin):
                 Whether ot not to also return a dictionary containing missing keys, unexpected keys and error messages.
             local_files_only(:obj:`bool`, `optional`, defaults to :obj:`False`):
                 Whether or not to only look at local files (e.g., not try doanloading the model).
+            use_auth_token (:obj:`str` or `bool`, `optional`):
+                The token to use as HTTP bearer authorization for remote files. If :obj:`True`, will use the token
+                generated when running :obj:`transformers-cli login` (stored in :obj:`~/.huggingface`).
             revision(:obj:`str`, `optional`, defaults to :obj:`"main"`):
                 The specific model version to use. It can be a branch name, a tag name, or a commit id, since we use a
                 git-based system for storing models and other artifacts on huggingface.co, so ``revision`` can be any
@@ -915,6 +918,10 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin):
                       ``kwargs`` that corresponds to a configuration attribute will be used to override said attribute
                       with the supplied ``kwargs`` value. Remaining keys that do not correspond to any configuration
                       attribute will be passed to the underlying model's ``__init__`` function.
+
+        .. note::
+
+            Passing :obj:`use_auth_token=True` is required when you want to use a private model.
 
         Examples::
 
@@ -939,6 +946,7 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin):
         proxies = kwargs.pop("proxies", None)
         output_loading_info = kwargs.pop("output_loading_info", False)
         local_files_only = kwargs.pop("local_files_only", False)
+        use_auth_token = kwargs.pop("use_auth_token", None)
         revision = kwargs.pop("revision", None)
         mirror = kwargs.pop("mirror", None)
 
@@ -954,6 +962,7 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin):
                 resume_download=resume_download,
                 proxies=proxies,
                 local_files_only=local_files_only,
+                use_auth_token=use_auth_token,
                 revision=revision,
                 **kwargs,
             )
@@ -996,6 +1005,7 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin):
                     proxies=proxies,
                     resume_download=resume_download,
                     local_files_only=local_files_only,
+                    use_auth_token=use_auth_token,
                 )
             except EnvironmentError as err:
                 logger.error(err)
@@ -1346,7 +1356,7 @@ def shape_list(tensor: tf.Tensor) -> List[int]:
     dynamic = tf.shape(tensor)
 
     if tensor.shape == tf.TensorShape(None):
-        return dynamic.as_list()
+        return dynamic
 
     static = tensor.shape.as_list()
 
@@ -1364,31 +1374,6 @@ def get_initializer(initializer_range: float = 0.02) -> tf.initializers.Truncate
         :obj:`tf.initializers.TruncatedNormal`: The truncated normal initializer.
     """
     return tf.keras.initializers.TruncatedNormal(stddev=initializer_range)
-
-
-def cast_bool_to_primitive(bool_variable: Union[tf.Tensor, bool], default_tensor_to_true=False) -> bool:
-    """
-    Function arguments can be inserted as boolean tensor and bool variables to cope with Keras serialization we need to
-    cast the bool arguments (like :obj:`output_attentions` for instance) to correct boolean if it is a tensor.
-
-    Args:
-        bool_variable (:obj:`Union[tf.Tensor, bool]`):
-            The variable to convert to a boolean.
-        default_tensor_to_true (:obj:`bool`, `optional`, defaults to `False`):
-            The default value to use in case the tensor has no numpy attribute.
-
-    Returns:
-        :obj:`bool`: The converted value.
-    """
-    # if bool variable is tensor and has numpy value
-    if tf.is_tensor(bool_variable):
-        if hasattr(bool_variable, "numpy"):
-            return bool(bool_variable.numpy())
-        elif default_tensor_to_true:
-            return True
-
-    # else variable is bool
-    return bool_variable
 
 
 class TFWrappedEmbeddings:
