@@ -1,0 +1,6 @@
+./run_eval.py out-nnns-bart-base/best_tfmr/ benchmark/benchmark.source benchmark/bart.target --reference_path=benchmark/benchmark.target --score_path=benchmark/bart.json --task=translation --max_target_length 84;
+./run_eval.py out-nnns-t5-base/best_tfmr/ benchmark/benchmark.source benchmark/t5.target --reference_path=benchmark/benchmark.target --score_path=benchmark/t5.json --task=translation --max_target_length 84;
+./run_eval.py out-nnns-marian-en-de/best_tfmr/ benchmark/benchmark.source benchmark/marian.target --reference_path=benchmark/benchmark.target --score_path=benchmark/marian.json --task=translation --max_target_length 84;
+./run_eval.py out-nnns-no-var-bart-base/best_tfmr/ benchmark/benchmark.source benchmark/bart-no-var.target --reference_path=benchmark/benchmark.target --score_path=benchmark/bart-no-var.json --task=translation --max_target_length 84;
+./run_eval.py out-nnns-no-var-t5-base/best_tfmr/ benchmark/benchmark.source benchmark/t5-no-var.target --reference_path=benchmark/benchmark.target --score_path=benchmark/t5-no-var.json --task=translation --max_target_length 84;
+./run_eval.py out-nnns-no-var-marian-en-de/best_tfmr/ benchmark/benchmark.source benchmark/marian-no-var.target --reference_path=benchmark/benchmark.target --score_path=benchmark/marian-no-var.json --task=translation --max_target_length 84;
